@@ -1,9 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useState, useCallback } from "react"
-import { Sidebar } from "@/components/Sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 import { ArticleGrid } from "@/components/ArticleGrid"
 import { AddFeedModal } from "@/components/AddFeedModal"
-import { AddFolderModal } from "@/components/AddFolderModal"
 import { getAllData } from "@/server/rss"
 import type { Selection, FolderRow, FeedRow } from "@/components/Sidebar"
 import type { ArticleRow } from "@/components/ArticleGrid"
@@ -24,8 +35,6 @@ function RSSReader() {
 
   const [selection, setSelection] = useState<Selection>({ type: "all" })
   const [addFeedOpen, setAddFeedOpen] = useState(false)
-  const [addFolderOpen, setAddFolderOpen] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   // Reload all data from DB
   const reload = useCallback(async () => {
@@ -98,6 +107,19 @@ function RSSReader() {
   const readLaterCount = allArticles.filter((a) => a.isReadLater).length
   const favoritesCount = allArticles.filter((a) => a.isFavorite).length
 
+  function getSelectionTitle(s: Selection): string {
+    switch (s.type) {
+      case "all": return "All Articles"
+      case "today": return "Today"
+      case "bookmarks": return "Bookmarks"
+      case "readLater": return "Read Later"
+      case "favorites": return "Favorites"
+      case "folder": return folders.find(f => f.id === s.folderId)?.name || "Folder"
+      case "feed": return feeds.find(f => f.id === s.feedId)?.name || "Feed"
+      default: return "RSS Reader"
+    }
+  }
+
   const handleFolderCreated = async () => {
     await reload()
   }
@@ -107,40 +129,51 @@ function RSSReader() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0a0a0a]">
-      <div 
-        className={`transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "w-40 opacity-100" : "w-0 opacity-0 overflow-hidden"
-        }`}
-      >
-        <Sidebar
-          folders={folders}
-          feeds={feeds}
-          articleCounts={articleCounts}
-          totalCount={totalCount}
-          todayCount={todayCount}
-          bookmarksCount={bookmarksCount}
-          readLaterCount={readLaterCount}
-          favoritesCount={favoritesCount}
-          selection={selection}
-          onSelect={setSelection}
-          onAddFolderClick={() => setAddFolderOpen(true)}
-          onAddFeedClick={() => setAddFeedOpen(true)}
-          onRefreshData={reload}
-          setSidebarOpen={setSidebarOpen}
-        />
-      </div>
+    <SidebarProvider>
+      <AppSidebar
+        folders={folders}
+        feeds={feeds}
+        articleCounts={articleCounts}
+        totalCount={totalCount}
+        todayCount={todayCount}
+        bookmarksCount={bookmarksCount}
+        readLaterCount={readLaterCount}
+        favoritesCount={favoritesCount}
+        selection={selection}
+        onSelectionChange={setSelection}
+        onFolderCreated={reload}
+      />
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2">
+          <div className="flex flex-1 items-center gap-2 px-3">
+            <SidebarTrigger />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="line-clamp-1">
+                    {getSelectionTitle(selection)}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
 
-      <div className="flex flex-1 flex-col min-w-0">
-        <ArticleGrid
-          articles={filteredArticles}
-          selection={selection}
-          onAddFeedClick={() => setAddFeedOpen(true)}
-          onRefreshed={reload}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
-      </div>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <ArticleGrid
+            articles={filteredArticles}
+            selection={selection}
+            onAddFeedClick={() => setAddFeedOpen(true)}
+            onRefreshed={reload}
+            sidebarOpen={true} // Now managed by SidebarProvider
+            setSidebarOpen={() => { }} // Now managed by SidebarProvider
+          />
+        </div>
+      </SidebarInset>
 
       <AddFeedModal
         open={addFeedOpen}
@@ -148,12 +181,6 @@ function RSSReader() {
         folders={folders}
         onFeedAdded={handleFeedAdded}
       />
-
-      <AddFolderModal
-        open={addFolderOpen}
-        onOpenChange={setAddFolderOpen}
-        onFolderCreated={handleFolderCreated}
-      />
-    </div>
+    </SidebarProvider>
   )
 }
