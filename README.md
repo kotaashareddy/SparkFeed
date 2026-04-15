@@ -5,15 +5,15 @@
   *A local-first, high-performance RSS aggregator built with React 19, SQLite, and TanStack Start.*
 
   <p align="center">
-    <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSparkable-dev%2FSparkFeed&env=DATABASE_URL,VITE_API_URL&project-name=spark-feed&repository-name=spark-feed">
+    <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fkotaashareddy%2FSparkFeed&env=DATABASE_URL,VITE_API_URL&project-name=spark-feed&repository-name=spark-feed">
       <img src="https://vercel.com/button" alt="Deploy with Vercel" height="32" />
     </a>
   </p>
 
   <p align="center">
-    <img src="https://img.shields.io/github/actions/workflow/status/Sparkable-dev/SparkFeed/build.yml?branch=main&style=for-the-badge&logo=github&color=black" alt="Build Status" />
-    <img src="https://img.shields.io/github/license/Sparkable-dev/SparkFeed?style=for-the-badge&logo=opensourceinitiative&color=black" alt="License" />
-    <img src="https://img.shields.io/github/stars/Sparkable-dev/SparkFeed?style=for-the-badge&logo=github&color=black" alt="Stars" />
+    <img src="https://img.shields.io/github/actions/workflow/status/kotaashareddy/SparkFeed/build.yml?branch=main&style=for-the-badge&logo=github&color=black" alt="Build Status" />
+    <img src="https://img.shields.io/github/license/kotaashareddy/SparkFeed?style=for-the-badge&logo=opensourceinitiative&color=black" alt="License" />
+    <img src="https://img.shields.io/github/stars/kotaashareddy/SparkFeed?style=for-the-badge&logo=github&color=black" alt="Stars" />
   </p>
 
   <p align="center">
