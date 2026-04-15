@@ -145,13 +145,13 @@ export function RSSShell({
   // Apply search filter
   const displayedArticles = search
     ? dateFiltered.filter((a) => {
-        const q = search.toLowerCase()
-        return (
-          a.title.toLowerCase().includes(q) ||
-          (a.domain ?? "").includes(q) ||
-          (a.feedName ?? "").toLowerCase().includes(q)
-        )
-      })
+      const q = search.toLowerCase()
+      return (
+        a.title.toLowerCase().includes(q) ||
+        (a.domain ?? "").includes(q) ||
+        (a.feedName ?? "").toLowerCase().includes(q)
+      )
+    })
     : dateFiltered
 
   // Counts per feed (for sidebar badges)

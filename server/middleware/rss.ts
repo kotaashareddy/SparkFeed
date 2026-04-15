@@ -1,6 +1,7 @@
-import { defineEventHandler, setResponseHeader, createError, getRequestURL } from "h3"
-import Database from "better-sqlite3"
-import { join } from "path"
+import { defineEventHandler, setResponseHeader, getRequestURL } from "h3"
+import { db } from "../../src/db/index"
+import { folders as foldersTable, feeds as feedsTable, articles as articlesTable } from "../../src/db/schema"
+import { eq, desc, inArray } from "drizzle-orm"
 
 function slugify(text: string): string {
   return text.toLowerCase().trim().replace(/\s+/g, "-")
@@ -26,14 +27,13 @@ export default defineEventHandler(async (event) => {
 
   if (!pathname.endsWith("/feed")) return
 
-  const db = new Database(join(process.cwd(), "rss.db"))
   try {
     const slugParts = pathname.split("/").filter(Boolean).slice(0, -1)
-
     if (slugParts.length === 0) return
 
-    const folders = db.prepare("SELECT * FROM folders").all() as any[]
-    const allFeeds = db.prepare("SELECT * FROM feeds").all() as any[]
+    // Fetch all folders and feeds using Drizzle
+    const folders = await db.select().from(foldersTable)
+    const allFeeds = await db.select().from(feedsTable)
 
     const folderSlug = slugParts[0]
     const folder = folders.find((f) => slugify(f.name) === folderSlug)
@@ -44,19 +44,18 @@ export default defineEventHandler(async (event) => {
     if (folder) {
       channelTitle = folder.name
       if (slugParts.length === 1) {
-        targetFeedIds = allFeeds.filter((f) => f.folder_id === folder.id).map((f) => f.id)
+        targetFeedIds = allFeeds.filter((f) => f.folderId === folder.id).map((f) => f.id)
       } else if (slugParts.length === 2) {
         const feedSlug = slugParts[1]
-        const feed = allFeeds.find((f) => f.folder_id === folder.id && slugify(f.name) === feedSlug)
+        const feed = allFeeds.find((f) => f.folderId === folder.id && slugify(f.name) === feedSlug)
         if (feed) {
           targetFeedIds = [feed.id]
           channelTitle = feed.name
         }
       }
     } else if (slugParts.length === 2 && slugParts[0] === "feed") {
-      // Standalone feed fallback (e.g. /feed/my-feed/feed)
       const feedSlug = slugParts[1]
-      const feed = allFeeds.find((f) => !f.folder_id && slugify(f.name) === feedSlug)
+      const feed = allFeeds.find((f) => !f.folderId && slugify(f.name) === feedSlug)
       if (feed) {
         targetFeedIds = [feed.id]
         channelTitle = feed.name
@@ -65,10 +64,13 @@ export default defineEventHandler(async (event) => {
 
     if (targetFeedIds.length === 0) return
 
-    const placeholders = targetFeedIds.map(() => "?").join(",")
-    const articles = targetFeedIds.length > 0
-      ? db.prepare(`SELECT * FROM articles WHERE feed_id IN (${placeholders}) ORDER BY published_at DESC LIMIT 50`).all(...targetFeedIds) as any[]
-      : []
+    // Fetch articles using Drizzle
+    const articles = await db
+      .select()
+      .from(articlesTable)
+      .where(inArray(articlesTable.feedId, targetFeedIds))
+      .orderBy(desc(articlesTable.publishedAt))
+      .limit(50)
 
     const itemsXml = articles.map((article) => {
       const enclosure = article.image
@@ -79,7 +81,7 @@ export default defineEventHandler(async (event) => {
       <title>${escapeXml(article.title)}</title>
       <link>${escapeXml(article.link)}</link>
       <description>${escapeXml(article.description || "")}</description>
-      <pubDate>${article.published_at ? new Date(article.published_at).toUTCString() : ""}</pubDate>
+      <pubDate>${article.publishedAt ? new Date(article.publishedAt).toUTCString() : ""}</pubDate>
       ${enclosure}
     </item>`
     }).join("\n")
@@ -88,8 +90,9 @@ export default defineEventHandler(async (event) => {
 <rss version="2.0">
   <channel>
     <title>${escapeXml(channelTitle)}</title>
-    <link>http://localhost:3000</link>
-    <description>Latest articles</description>
+    <link>${url.origin}</link>
+    <description>Latest articles from ${escapeXml(channelTitle)}</description>
+    <generator>SparkFeed</generator>
 ${itemsXml}
   </channel>
 </rss>`
@@ -98,7 +101,6 @@ ${itemsXml}
     return xml
   } catch (err) {
     console.error("RSS Middleware Error:", err)
-  } finally {
-    db.close()
   }
 })
+

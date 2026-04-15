@@ -1,14 +1,28 @@
 <div align="center">
-  <img src="src/logo.svg" alt="RSS Reader Logo" width="150" height="150" />
+  <img src="public/logo.svg" alt="SparkFeed Logo" width="120" height="120" style="margin-bottom: 20px" />
 
-  [![Build Status](https://img.shields.io/github/actions/workflow/status/kotaashareddy/Rss/build.yml?branch=main&style=flat-square)](https://github.com/kotaashareddy/Rss/actions)
-  [![Version](https://img.shields.io/github/package-json/v/kotaashareddy/Rss?style=flat-square)](https://github.com/kotaashareddy/Rss/releases)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-  [![Contributors](https://img.shields.io/github/contributors/kotaashareddy/Rss?style=flat-square)](https://github.com/kotaashareddy/Rss/graphs/contributors)
-  [![Stars](https://img.shields.io/github/stars/kotaashareddy/Rss?style=flat-square)](https://github.com/kotaashareddy/Rss/stargazers)
+  # SparkFeed
+  *A local-first, high-performance RSS aggregator built with React 19, SQLite, and TanStack Start.*
 
-  # Modern RSS Reader
-  *A local-first, self-hostable feed aggregator built with React 19 and SQLite — no cloud, no tracking, just reading.*
+  <p align="center">
+    <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fkotaashareddy%2FRss&env=DATABASE_URL,VITE_API_URL&project-name=spark-feed&repository-name=spark-feed">
+      <img src="https://vercel.com/button" alt="Deploy with Vercel" height="32" />
+    </a>
+  </p>
+
+  <p align="center">
+    <img src="https://img.shields.io/github/actions/workflow/status/kotaashareddy/Rss/build.yml?branch=main&style=for-the-badge&logo=github&color=black" alt="Build Status" />
+    <img src="https://img.shields.io/github/license/kotaashareddy/Rss?style=for-the-badge&logo=opensourceinitiative&color=black" alt="License" />
+    <img src="https://img.shields.io/github/stars/kotaashareddy/Rss?style=for-the-badge&logo=github&color=black" alt="Stars" />
+  </p>
+
+  <p align="center">
+    <img src="https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React 19" />
+    <img src="https://img.shields.io/badge/TanStack_Start-FF4154?style=flat-square&logo=tanstack&logoColor=white" alt="TanStack" />
+    <img src="https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=flat-square&logo=drizzle&logoColor=black" alt="Drizzle" />
+    <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind" />
+  </p>
 </div>
 
 ---
