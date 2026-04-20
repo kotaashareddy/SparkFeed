@@ -1,12 +1,5 @@
 {
-  "version": 2,
   "framework": "vite",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
@@ -14,3 +7,4 @@
     }
   ]
 }
+
