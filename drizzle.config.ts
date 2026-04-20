@@ -5,8 +5,7 @@ export default defineConfig({
     out: './drizzle',
     dialect: 'sqlite',
     dbCredentials: {
-        url: process.env.DATABASE_URL || 'rss.db',
+        url: process.env.DATABASE_URL!,
         authToken: process.env.DATABASE_AUTH_TOKEN,
     },
-
 })
