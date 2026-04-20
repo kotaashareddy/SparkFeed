@@ -1,7 +1,7 @@
 import { db } from "@/db/index"
 import { users } from "@/db/schema"
 import { eq } from "drizzle-orm"
-import { getWebRequest } from "@tanstack/react-start"
+import { getWebRequest } from "@tanstack/react-start/server"
 
 /**
  * Extracts and validates the API key from the request headers.
