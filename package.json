@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
-    "vercel-build": "npm run build",
+    "vercel-build": "NITRO_PRESET=vercel npm run build",
     "db:push": "drizzle-kit push --force",
     "preview": "vite preview",
     "test": "vitest run",
