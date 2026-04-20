@@ -1,7 +1,7 @@
 import { db } from "@/db/index"
 import { users } from "@/db/schema"
 import { eq } from "drizzle-orm"
-import { getWebRequest } from "@tanstack/react-start/server"
+import { getRequest } from "@tanstack/react-start/server"
 
 /**
  * Extracts and validates the API key from the request headers.
@@ -9,8 +9,9 @@ import { getWebRequest } from "@tanstack/react-start/server"
  * Throws an error if the key is missing or invalid.
  */
 export async function getAuthUser() {
-    const request = getWebRequest()
+    const request = getRequest()
     const apiKey = request?.headers.get("x-api-key")
+
 
     if (!apiKey) {
         throw new Error("Missing API Key. Please provide x-api-key in headers.")
