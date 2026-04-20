@@ -1,8 +1,17 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 
+export const users = sqliteTable('users', {
+    id: text('id').primaryKey(), // Usually a clerk or lucia UID
+    email: text('email').notNull().unique(),
+    apiKey: text('api_key').notNull().unique(),
+    name: text('name'),
+    createdAt: text('created_at').default(new Date().toISOString()),
+})
+
 export const folders = sqliteTable('folders', {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
+    userId: text('user_id').references(() => users.id).notNull(), // Owner of the folder
     createdAt: text('created_at').default(new Date().toISOString()),
 })
 
@@ -10,6 +19,7 @@ export const feeds = sqliteTable('feeds', {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     url: text('url').notNull(),
+    userId: text('user_id').references(() => users.id).notNull(), // Owner of the feed
     folderId: text('folder_id').references(() => folders.id),
     includeKeywords: text('include_keywords'),
     excludeKeywords: text('exclude_keywords'),
@@ -30,4 +40,4 @@ export const articles = sqliteTable('articles', {
     isReadLater: integer('is_read_later', { mode: 'boolean' }).default(false),
     isFavorite: integer('is_favorite', { mode: 'boolean' }).default(false),
     createdAt: text('created_at').default(new Date().toISOString()),
-})
+})

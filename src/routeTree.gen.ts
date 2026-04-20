@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodayRouteImport } from './routes/today'
+import { Route as TestSaasRouteImport } from './routes/test-saas'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as FolderSlugRouteImport } from './routes/$folderSlug'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as FolderSlugFeedSlugIndexRouteImport } from './routes/$folderSlu
 const TodayRoute = TodayRouteImport.update({
   id: '/today',
   path: '/today',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestSaasRoute = TestSaasRouteImport.update({
+  id: '/test-saas',
+  path: '/test-saas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FavoritesRoute = FavoritesRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$folderSlug': typeof FolderSlugRouteWithChildren
   '/favorites': typeof FavoritesRoute
+  '/test-saas': typeof TestSaasRoute
   '/today': typeof TodayRoute
   '/feed/$feedSlug': typeof FeedFeedSlugRoute
   '/$folderSlug/': typeof FolderSlugIndexRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/favorites': typeof FavoritesRoute
+  '/test-saas': typeof TestSaasRoute
   '/today': typeof TodayRoute
   '/feed/$feedSlug': typeof FeedFeedSlugRoute
   '/$folderSlug': typeof FolderSlugIndexRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$folderSlug': typeof FolderSlugRouteWithChildren
   '/favorites': typeof FavoritesRoute
+  '/test-saas': typeof TestSaasRoute
   '/today': typeof TodayRoute
   '/feed/$feedSlug': typeof FeedFeedSlugRoute
   '/$folderSlug/': typeof FolderSlugIndexRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$folderSlug'
     | '/favorites'
+    | '/test-saas'
     | '/today'
     | '/feed/$feedSlug'
     | '/$folderSlug/'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/favorites'
+    | '/test-saas'
     | '/today'
     | '/feed/$feedSlug'
     | '/$folderSlug'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$folderSlug'
     | '/favorites'
+    | '/test-saas'
     | '/today'
     | '/feed/$feedSlug'
     | '/$folderSlug/'
@@ -113,6 +125,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FolderSlugRoute: typeof FolderSlugRouteWithChildren
   FavoritesRoute: typeof FavoritesRoute
+  TestSaasRoute: typeof TestSaasRoute
   TodayRoute: typeof TodayRoute
   FeedFeedSlugRoute: typeof FeedFeedSlugRoute
 }
@@ -124,6 +137,13 @@ declare module '@tanstack/react-router' {
       path: '/today'
       fullPath: '/today'
       preLoaderRoute: typeof TodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-saas': {
+      id: '/test-saas'
+      path: '/test-saas'
+      fullPath: '/test-saas'
+      preLoaderRoute: typeof TestSaasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/favorites': {
@@ -189,6 +209,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FolderSlugRoute: FolderSlugRouteWithChildren,
   FavoritesRoute: FavoritesRoute,
+  TestSaasRoute: TestSaasRoute,
   TodayRoute: TodayRoute,
   FeedFeedSlugRoute: FeedFeedSlugRoute,
 }

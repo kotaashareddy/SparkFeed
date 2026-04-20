@@ -228,18 +228,23 @@ import { folders, feeds, articles } from "@/db/schema"
 import { eq, desc, inArray } from "drizzle-orm"
 import Parser from "rss-parser"
 import { randomUUID } from "crypto"
+import { getAuthUser } from "./auth"
+import { and } from "drizzle-orm"
 
 //─────────────────────────────────────────────
 // FETCH ALL DATA
 //─────────────────────────────────────────────
 
 export const getAllData = createServerFn({ method: "GET" }).handler(async () => {
-  const [allFolders, allFeeds, allArticles] = await Promise.all([
-    db.select().from(folders).orderBy(folders.createdAt),
-    db.select().from(feeds).orderBy(feeds.createdAt),
-    db.select().from(articles).orderBy(desc(articles.publishedAt)),
-  ])
-  return { folders: allFolders, feeds: allFeeds, articles: allArticles }
+    const user = await getAuthUser()
+    const [allFolders, allFeeds, allArticles] = await Promise.all([
+        db.select().from(folders).where(eq(folders.userId, user.id)).orderBy(folders.createdAt),
+        db.select().from(feeds).where(eq(feeds.userId, user.id)).orderBy(feeds.createdAt),
+        db.select().from(articles).where(inArray(articles.feedId, 
+            db.select({ id: feeds.id }).from(feeds).where(eq(feeds.userId, user.id))
+        )).orderBy(desc(articles.publishedAt)),
+    ])
+    return { folders: allFolders, feeds: allFeeds, articles: allArticles }
 })
 
 //─────────────────────────────────────────────
@@ -249,8 +254,9 @@ export const getAllData = createServerFn({ method: "GET" }).handler(async () => 
 export const createFolder = createServerFn({ method: "POST" })
   .inputValidator((d: any) => z.object({ name: z.string().min(1) }).parse(d))
   .handler(async ({ data }) => {
+    const user = await getAuthUser()
     const id = randomUUID()
-    await db.insert(folders).values({ id, name: data.name })
+    await db.insert(folders).values({ id, name: data.name, userId: user.id })
     return { id, name: data.name }
   })
 
@@ -269,11 +275,13 @@ export const createFeed = createServerFn({ method: "POST" })
     }).parse(d)
   )
   .handler(async ({ data }) => {
+    const user = await getAuthUser()
     const id = randomUUID()
     await db.insert(feeds).values({
       id,
       name: data.name,
       url: data.url,
+      userId: user.id,
       folderId: data.folderId,
       includeKeywords: JSON.stringify(data.includeKeywords),
       excludeKeywords: JSON.stringify(data.excludeKeywords),
@@ -294,15 +302,16 @@ export const createFeed = createServerFn({ method: "POST" })
 //─────────────────────────────────────────────
 
 export const refreshAllFeeds = createServerFn({ method: "POST" }).handler(async () => {
-  const allFeeds = await db.select().from(feeds)
-  const results = await Promise.allSettled(
-    allFeeds.map((f: { id: string; url: string }) => fetchAndInsertArticles(f.id, f.url))
-  )
-  const inserted = results.reduce(
-    (acc: number, r) => acc + (r.status === "fulfilled" ? r.value : 0),
-    0
-  )
-  return { inserted }
+    const user = await getAuthUser()
+    const allFeeds = await db.select().from(feeds).where(eq(feeds.userId, user.id))
+    const results = await Promise.allSettled(
+        allFeeds.map((f: { id: string; url: string }) => fetchAndInsertArticles(f.id, f.url))
+    )
+    const inserted = results.reduce(
+        (acc: number, r) => acc + (r.status === "fulfilled" ? r.value : 0),
+        0
+    )
+    return { inserted }
 })
 
 //─────────────────────────────────────────────
@@ -312,10 +321,11 @@ export const refreshAllFeeds = createServerFn({ method: "POST" }).handler(async 
 export const refreshFolder = createServerFn({ method: "POST" })
   .inputValidator((d: any) => z.object({ folderId: z.string() }).parse(d))
   .handler(async ({ data }) => {
+    const user = await getAuthUser()
     const folderFeeds = await db
       .select()
       .from(feeds)
-      .where(eq(feeds.folderId, data.folderId))
+      .where(and(eq(feeds.folderId, data.folderId), eq(feeds.userId, user.id)))
 
     const results = await Promise.allSettled(
       folderFeeds.map((f: { id: string; url: string }) =>
@@ -451,34 +461,40 @@ export const toggleFavorite = createServerFn({ method: "POST" })
 export const deleteFeed = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
-    await db.delete(articles).where(eq(articles.feedId, data.id))
-    await db.delete(feeds).where(eq(feeds.id, data.id))
+    const user = await getAuthUser()
+    await db.delete(articles).where(inArray(articles.feedId, 
+        db.select({ id: feeds.id }).from(feeds).where(and(eq(feeds.id, data.id), eq(feeds.userId, user.id)))
+    ))
+    await db.delete(feeds).where(and(eq(feeds.id, data.id), eq(feeds.userId, user.id)))
   })
 
 export const deleteFolder = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
+    const user = await getAuthUser()
     const childFeeds = await db
       .select({ id: feeds.id })
       .from(feeds)
-      .where(eq(feeds.folderId, data.id))
+      .where(and(eq(feeds.folderId, data.id), eq(feeds.userId, user.id)))
 
     if (childFeeds.length > 0) {
       const feedIds = childFeeds.map((f) => f.id)
       await db.delete(articles).where(inArray(articles.feedId, feedIds))
     }
-    await db.delete(feeds).where(eq(feeds.folderId, data.id))
-    await db.delete(folders).where(eq(folders.id, data.id))
+    await db.delete(feeds).where(and(eq(feeds.folderId, data.id), eq(feeds.userId, user.id)))
+    await db.delete(folders).where(and(eq(folders.id, data.id), eq(folders.userId, user.id)))
   })
 
 export const renameFolder = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string(), name: z.string().min(1) }))
   .handler(async ({ data }) => {
-    await db.update(folders).set({ name: data.name }).where(eq(folders.id, data.id))
+    const user = await getAuthUser()
+    await db.update(folders).set({ name: data.name }).where(and(eq(folders.id, data.id), eq(folders.userId, user.id)))
   })
 
 export const renameFeed = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string(), name: z.string().min(1) }))
   .handler(async ({ data }) => {
-    await db.update(feeds).set({ name: data.name }).where(eq(feeds.id, data.id))
+    const user = await getAuthUser()
+    await db.update(feeds).set({ name: data.name }).where(and(eq(feeds.id, data.id), eq(feeds.userId, user.id)))
   })
